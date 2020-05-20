@@ -37,7 +37,7 @@ LR = "lr_"
 TB = "tb_"
 ```
 ####
-```python
+```shell
 # 最后执行
 python transform.py
 ```
