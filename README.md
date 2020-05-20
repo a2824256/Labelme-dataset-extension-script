@@ -36,3 +36,8 @@ LR = "lr_"
 # 上下翻转文件名附加字符
 TB = "tb_"
 ```
+####
+```python
+# 最后执行
+python transform.py
+```
