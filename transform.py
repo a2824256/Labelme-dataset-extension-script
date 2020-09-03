@@ -1,18 +1,21 @@
-from PIL import Image
+from PIL import Image, ImageEnhance
 import os
 import glob
 import json
 import base64
+import cv2
+from numba import njit, jit
+import numpy as np
+from shutil import copyfile
 
 lf_sw = False
 tb_sw = False
-light_sw = True
-dark_sw = True
+random_distort_sw = True
 
 # 数据集路径
-path = ".\\data\\"
+path = "E:\\0720data\\"
 # 生成数据的保存路径
-save_path = ".\\data\\"
+save_path = "E:\\0720data\\"
 # 当前数据集图片格式
 file_format = ".jpg"
 # 替换格式jpg -> json
@@ -24,11 +27,32 @@ TB = "tb_"
 # 获取数据集目录的图片数据集
 img_list = glob.glob(path + "*" + file_format)
 
-def changerightness(img):
+
+def random_distort(img, type):
+    def random_brightness(img, lower=0.5, upper=0.8):
+        e = np.random.uniform(lower, upper)
+        return ImageEnhance.Brightness(img).enhance(e)
+    def random_Brightness2(img, lower=1, upper=1.2):
+        e = np.random.uniform(lower, upper)
+        return ImageEnhance.Brightness(img).enhance(e)
+
+    ops = [random_brightness, random_Brightness2]
+    np.random.shuffle(ops)
+
+    img = Image.fromarray(img)
+    img = ops[type](img)
+    # img = ops[0](img)
+    # img = ops[1](img)
+    # img = ops[2](img)
+    img = np.asarray(img)
+    return img
+
+
+@njit
+def brightnessCtrl(img, b):
     dst = img.copy()
     rows, cols, channels = img.shape
     a = 1
-    b = -20
     for i in range(rows):
         for j in range(cols):
             for c in range(3):
@@ -38,6 +62,12 @@ def changerightness(img):
                 elif color < 0:  # 防止像素值越界（0~255）
                     dst[i, j][c] = 0
     return dst
+
+
+# 亮度控制函数
+def changeBrightness(path, b):
+    img = cv2.imread(path)
+    return brightnessCtrl(img, b)
 
 if lf_sw is True:
     print("左右翻转-start")
@@ -61,7 +91,7 @@ if lf_sw is True:
             mid_width = width / 2
             mid_height = height / 2
 
-            print("中轴：x-" + str(mid_width) + ",y-" + str(mid_height))
+            # print("中轴：x-" + str(mid_width) + ",y-" + str(mid_height))
             # 2.遍历shapes
             for i2 in range(len(setting['shapes'])):
                 # 3.遍历每个shapes的点
@@ -153,28 +183,39 @@ if tb_sw is True:
             print(json_path + "-------文件不存在")
     print("上下翻转-end")
 
-if light_sw is True:
-    print("变亮-start")
-    # for i in range(len(img_list)):
 
-        # import cv2
-        #
-        # img = cv2.imread('./data/test.png')
-        # cv2.imshow('original_img', img)
-        # rows, cols, channels = img.shape
-        # dst = img.copy()
-        #
-        # a = 1
-        # b = -20
-        # for i in range(rows):
-        #     for j in range(cols):
-        #         for c in range(3):
-        #             color = img[i, j][c] * a + b
-        #             if color > 255:  # 防止像素值越界（0~255）
-        #                 dst[i, j][c] = 255
-        #             elif color < 0:  # 防止像素值越界（0~255）
-        #                 dst[i, j][c] = 0
-        #
-        # cv2.imshow('dst', dst)
-        # cv2.waitKey(20000)
-        # # cv2.destroyAllWindows()
+if random_distort_sw is True:
+    print("随机亮度、对比度、颜色微调-start")
+    for i in range(len(img_list)):
+        json_path = img_list[i].replace(file_format, replace_format)
+        is_exists = os.path.exists(json_path)
+        if is_exists:
+            f = open(json_path, encoding='utf-8')
+            setting = json.load(f)
+            setting2 = setting
+            img = Image.open(img_list[i])
+            img = np.array(img)
+            img1 = random_distort(img, 0)
+            img2 = random_distort(img, 1)
+            img_f1 = Image.fromarray(np.uint8(img1))
+            img_f2 = Image.fromarray(np.uint8(img2))
+            file_name1 = img_list[i].replace(file_format, "_rd1.jpg")
+            file_name2 = img_list[i].replace(file_format, "_rd2.jpg")
+            setting['imagePath'] = file_name1
+            setting2['imagePath'] = file_name2
+            img_f1.save(file_name1)
+            img_f2.save(file_name2)
+            string1 = json.dumps(setting)
+            string2 = json.dumps(setting2)
+            with open(json_path.replace(replace_format, "_rd1.json"), 'w', encoding='utf-8') as f:
+                f.write(string1)
+                f.close()
+            with open(json_path.replace(replace_format, "_rd2.json"), 'w', encoding='utf-8') as f:
+                f.write(string2)
+                f.close()
+            print(img_list[i] + "转换完成")
+        else:
+            print(json_path + "-------文件不存在")
+
+
+
