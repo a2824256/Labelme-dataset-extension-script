@@ -41,3 +41,6 @@ TB = "tb_"
 # 最后执行
 python transform.py
 ```
+
+# 更新
+2020/09/03 - 更新labelme(语义分割)转labelimg(目标检测)标注文件
