@@ -44,3 +44,4 @@ python transform.py
 
 # 更新
 2020/09/03 - 更新labelme(语义分割)转labelimg(目标检测)标注文件
+           - labelme数据增广方案整合paddlepaddle官方提供的[随机亮度、对比度、颜色微调方法](https://www.paddlepaddle.org.cn/tutorials/projectdetail/600424#anchor-10)
