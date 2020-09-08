@@ -4,7 +4,7 @@ import json
 from numba import njit
 import xml.dom.minidom
 from xml.dom import minidom
-path = "./"
+path = "F:\\0903modeldata\\labels\\"
 img_list = glob.glob(path + "*.json")
 width = 0
 height = 0
@@ -38,6 +38,9 @@ def get_bndbox(list):
             ymin = int(list[i][1])
     return [xmin, ymin, xmax, ymax]
 
+
+
+
 for i in range(len(img_list)):
     json_path = img_list[i]
     is_exists = os.path.exists(json_path)
@@ -51,7 +54,7 @@ for i in range(len(img_list)):
         labels = content['shapes']
         labels = get_annotation(labels)
         image_path = content['imagePath']
-        path_array = image_path.split('/')
+        path_array = image_path.split('\\')
         length = len(path_array)
         if length < 1:
             continue
@@ -157,9 +160,11 @@ for i in range(len(img_list)):
             nameE_sub.appendChild(nameE_sub2)
             nameE.appendChild(nameE_sub)
             root.appendChild(nameE)
-        f = open(path_array[len(path_array)-1].replace('jpg','xml'), 'w')
+        new_file = path_array[len(path_array)-1].replace('jpg', 'xml')
+        new_file = "F:\\0903modeldata\\xml\\" + new_file
+        f = open(new_file, 'w')
         dom.writexml(f, addindent=' ', newl='\n', encoding='utf-8')
         f.close()
-        exit()
+        print(new_file + ' - 已生成')
     else:
-        print("没有该文件")
+        print(json_path + " - 没有该文件")
